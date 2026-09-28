@@ -6,7 +6,7 @@
     <title>Dragons El Puig — Calendario unificado</title>
     <link rel="preconnect" href="https://googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Big+Shoulders+Display:wght=600;700;800;900&family=Manrope:wght=400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       :root {
         --bg: #0E0D0C; --bg-alt: #161514; --card: #1B1918; --ink: #F5F3EF;
@@ -107,7 +107,6 @@
         <div class="hero-flame"></div>
         <div class="wrap">
             <div class="brand-row">
-                <!-- Escudo en la raíz del repositorio, renombrado como logo.png -->
                 <img src="logo.png" alt="Logo Dragons El Puig" class="badge">
                 <h1 class="club-name display">DRAGONS <span class="accent">EL PUIG</span></h1>
             </div>
@@ -116,7 +115,7 @@
     </header>
 
     <div class="wrap">
-        <!-- PRÓXIMO PARTIDO AUTOMÁTICO -->
+        <!-- PRÓXIMO PARTIDO -->
         <section id="next-match-section" class="next-match" style="display: none;">
             <div class="nm-header">
                 <span class="label">Próximo choque de la jornada</span>
@@ -125,13 +124,13 @@
             <div id="nm-list-container" class="nm-list"></div>
         </section>
 
-        <!-- SEPARACIÓN JUGADOS / PENDIENTES -->
+        <!-- PESTAÑAS -->
         <section class="status-tabs" id="status-tabs">
             <button class="tab-btn active" data-status="proximos">PRÓXIMOS PARTIDOS</button>
             <button class="tab-btn" data-status="resultados">RESULTADOS ANTERIORES</button>
         </section>
 
-        <!-- CHIPS FILTRADORES -->
+        <!-- FILTROS -->
         <section class="filters" id="category-filters">
             <div class="chip active" data-category="todos">Todos los equipos</div>
             <div class="chip" data-category="PreBenjamín">PreBenjamín</div>
@@ -141,7 +140,7 @@
             <div class="chip" data-category="Juvenil">Juvenil</div>
         </section>
 
-        <!-- CONTENEDOR PRINCIPAL -->
+        <!-- LISTADO -->
         <main id="matches-list">
             <div class="empty-state">Sincronizando con Google Sheets...</div>
         </main>
@@ -153,3 +152,7 @@
         </footer>
     </div>
 
+    <!-- CARGA DIRECTA DEL NUEVO CONTROLADOR ÚNICO -->
+    <script src="js/app-render.js"></script>
+</body>
+</html>
