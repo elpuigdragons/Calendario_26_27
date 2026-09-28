@@ -1,4 +1,5 @@
-// REEMPLAZA ESTO CON TU ENLACE LARGO DE GOOGLE SHEETS (DEBE TERMINAR EN ?output=csv)
+
+// Enlace oficial de tu hoja de cálculo exportada en formato CSV
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSl5xg397GTfLDogRcVZAXObRrp8JH7-j5YAlel0hNU1Sb33IS_WT0KxKDY_5fNKuL_YWnqUubSiG25/pub?gid=795521530&single=true&output=csv";
 
 function parseFlexibleDate(dateStr) {
@@ -14,56 +15,100 @@ function parseFlexibleDate(dateStr) {
     return new Date(dateStr);
 }
 
+// Procesa una línea CSV respetando comillas tipográficas complejas
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current.trim());
+    return result;
+}
+
 async function loadSheetsData() {
     try {
         const response = await fetch(SHEET_URL);
         const csvText = await response.text();
         
-        // Separamos filas evitando romper celdas complejas
-        const rows = csvText.split(/\r?\n/).slice(1); 
-        
-        return rows.map(row => {
-            const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*\$)/);
-            if(columns.length < 7) return null;
+        // Dividir por saltos de línea limpios
+        const rows = csvText.split(/\r?\n/);
+        if (rows.length <= 1) return [];
 
-            const local = columns[5]?.replace(/"/g, '').trim() || "";
-            const visitante = columns[6]?.replace(/"/g, '').trim() || "";
-            const res = columns[7]?.replace(/"/g, '').trim() || "-";
+        const matches = [];
 
-            // Lógica inteligente para saber el resultado (Victoria, Derrota, Empate)
+        // Saltamos la fila de cabecera (i = 1)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row.trim()) continue;
+
+            const columns = parseCSVLine(row);
+            if (columns.length < 8) continue; // Garantiza las columnas básicas
+
+            const categoria = columns[0] || "";
+            const fechaStr = columns[1] || "";
+            const fechaObj = parseFlexibleDate(fechaStr);
+            const hora = columns[2] || "";
+            const instalacion = columns[3] || "";
+            const jornada = columns[4] || "";
+            const local = columns[5] || "";
+            const visitante = columns[6] || "";
+            const res = columns[7] || "-";
+            const mapaUrl = columns[8] || "";
+
+            // Omitir si la fila está rota o no tiene fecha válida
+            if (!fechaObj || !categoria) continue;
+
+            // Determinar balance de victorias/derrotas para iluminar los badges
             let outcome = "pending";
-            if (res && res !== "-" && res !== "") {
-                const parts = res.split('-');
-                if(parts.length === 2) {
-                    const scoreLocal = parseInt(parts[0]);
-                    const scoreVisitante = parseInt(parts[1]);
+            const cleanRes = res.replace(/\s+/g, ''); // Quita espacios como "1 - 9" -> "1-9"
+            
+            if (cleanRes && cleanRes !== "-" && cleanRes.includes('-')) {
+                const parts = cleanRes.split('-');
+                if (parts.length === 2) {
+                    const scoreLocal = parseInt(parts[0], 10);
+                    const scoreVisitante = parseInt(parts[1], 10);
                     const isLocalDragons = local.toUpperCase().includes("DRAGONS");
-                    
-                    if(scoreLocal === scoreVisitante) outcome = "draw";
-                    else if((scoreLocal > scoreVisitante && isLocalDragons) || (scoreVisitante > scoreLocal && !isLocalDragons)) {
-                        outcome = "win";
-                    } else {
-                        outcome = "loss";
+
+                    if (!isNaN(scoreLocal) && !isNaN(scoreVisitante)) {
+                        if (scoreLocal === scoreVisitante) {
+                            outcome = "draw";
+                        } else if ((scoreLocal > scoreVisitante && isLocalDragons) || (scoreVisitante > scoreLocal && !isLocalDragons)) {
+                            outcome = "win";
+                        } else {
+                            outcome = "loss";
+                        }
                     }
                 }
             }
 
-            return {
-                categoria: columns[0]?.trim(),
-                fechaStr: columns[1]?.trim(),
-                fechaObj: parseFlexibleDate(columns[1]),
-                hora: columns[2]?.trim() || "",
-                instalacion: columns[3]?.trim(),
-                jornada: columns[4]?.trim(),
+            matches.push({
+                categoria,
+                fechaStr,
+                fechaObj,
+                hora,
+                instalacion,
+                jornada,
                 equipoLocal: local,
                 equipoVisitante: visitante,
                 resultado: res === "" ? "-" : res,
-                outcome: outcome,
-                mapaUrl: columns[8]?.replace(/"/g, '').trim() || ""
-            };
-        }).filter(item => item !== null && item.fechaObj !== null);
+                outcome,
+                mapaUrl
+            });
+        }
+        return matches;
     } catch (error) {
-        console.error("Error al descargar Google Sheets:", error);
+        console.error("Error crítico descargando el CSV:", error);
         return [];
     }
 }
