@@ -15,25 +15,10 @@ function parseFlexibleDate(dateStr) {
     return new Date(dateStr);
 }
 
-// Procesa una línea CSV respetando comillas tipográficas complejas
-function parseCSVLine(line) {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        if (char === '"') {
-            inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = '';
-        } else {
-            current += char;
-        }
-    }
-    result.push(current.trim());
-    return result;
+// Separador robusto que elimina comillas automáticas de Google Sheets
+function cleanCSVCell(cell) {
+    if (!cell) return "";
+    return cell.replace(/^"|"\$/g, '').trim();
 }
 
 async function loadSheetsData() {
@@ -41,37 +26,36 @@ async function loadSheetsData() {
         const response = await fetch(SHEET_URL);
         const csvText = await response.text();
         
-        // Dividir por saltos de línea limpios
         const rows = csvText.split(/\r?\n/);
         if (rows.length <= 1) return [];
 
         const matches = [];
 
-        // Saltamos la fila de cabecera (i = 1)
+        // Empezamos en 1 para saltar las cabeceras
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
             if (!row.trim()) continue;
 
-            const columns = parseCSVLine(row);
-            if (columns.length < 8) continue; // Garantiza las columnas básicas
+            // Separar por comas respetando las comas internas de los enlaces de Google Maps
+            const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*\$)/);
+            if (columns.length < 8) continue;
 
-            const categoria = columns[0] || "";
-            const fechaStr = columns[1] || "";
+            const categoria = cleanCSVCell(columns[0]);
+            const fechaStr = cleanCSVCell(columns[1]);
             const fechaObj = parseFlexibleDate(fechaStr);
-            const hora = columns[2] || "";
-            const instalacion = columns[3] || "";
-            const jornada = columns[4] || "";
-            const local = columns[5] || "";
-            const visitante = columns[6] || "";
-            const res = columns[7] || "-";
-            const mapaUrl = columns[8] || "";
+            const hora = cleanCSVCell(columns[2]);
+            const instalacion = cleanCSVCell(columns[3]);
+            const jornada = cleanCSVCell(columns[4]);
+            const local = cleanCSVCell(columns[5]);
+            const visitante = cleanCSVCell(columns[6]);
+            const res = cleanCSVCell(columns[7]);
+            const mapaUrl = columns[8] ? cleanCSVCell(columns[8]) : "";
 
-            // Omitir si la fila está rota o no tiene fecha válida
             if (!fechaObj || !categoria) continue;
 
-            // Determinar balance de victorias/derrotas para iluminar los badges
+            // Calcular si es victoria, derrota o empate para iluminar el marcador
             let outcome = "pending";
-            const cleanRes = res.replace(/\s+/g, ''); // Quita espacios como "1 - 9" -> "1-9"
+            const cleanRes = res.replace(/\s+/g, ''); 
             
             if (cleanRes && cleanRes !== "-" && cleanRes.includes('-')) {
                 const parts = cleanRes.split('-');
@@ -112,3 +96,4 @@ async function loadSheetsData() {
         return [];
     }
 }
+
