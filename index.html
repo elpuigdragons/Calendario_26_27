@@ -125,6 +125,40 @@
   .countdown .num { font-family: 'Big Shoulders Display', sans-serif; font-size: 1.7rem; font-weight: 800; color: var(--ember); line-height: 1; }
   .countdown .u-label { font-size: 0.64rem; color: var(--ink-dim); margin-top: 2px; }
 
+  /* ---------- VIEW TABS (Próximos / Jugados) ---------- */
+  .view-tabs {
+    display: inline-flex;
+    margin-top: 28px;
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .view-tab {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 18px;
+    border-radius: 100px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--ink-dim);
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s, color .15s;
+  }
+  .view-tab .count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--card);
+    color: var(--ink-dim);
+    padding: 2px 8px;
+    border-radius: 100px;
+  }
+  .view-tab:not(.active):hover { color: var(--ink); }
+  .view-tab.active { background: var(--ember); color: #FFFFFF; }
+  .view-tab.active .count { background: rgba(0,0,0,0.25); color: #FFFFFF; }
+  .view-tabs + .filters { margin-top: 18px; }
+
   /* ---------- FILTERS ---------- */
   .filters {
     display: flex; gap: 8px; flex-wrap: wrap;
@@ -260,6 +294,7 @@
       <div class="nm-list" id="nm-list"></div>
     </div>
 
+    <div class="view-tabs" id="view-tabs"></div>
     <div class="filters" id="filters"></div>
   </div>
 </header>
@@ -433,6 +468,34 @@ function highlightTeam(name) {
 
 let ALL_FIXTURES = [];
 let activeFilter = 'Todos';
+let activeView = 'proximos'; // 'proximos' | 'jugados'
+
+function startOfToday() {
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+// Un partido se considera jugado si ya tiene resultado o su fecha ya pasó
+function isPlayed(f) {
+  return !!f.resultado || f.dateObj < startOfToday();
+}
+
+function renderViewTabs() {
+  const base = activeFilter === 'Todos' ? ALL_FIXTURES : ALL_FIXTURES.filter(f => f.categoria === activeFilter);
+  const played = base.filter(isPlayed).length;
+  const upcoming = base.length - played;
+  const el = document.getElementById('view-tabs');
+  el.innerHTML = `
+    <span class="view-tab ${activeView === 'proximos' ? 'active' : ''}" data-view="proximos">Próximos <span class="count">${upcoming}</span></span>
+    <span class="view-tab ${activeView === 'jugados' ? 'active' : ''}" data-view="jugados">Jugados <span class="count">${played}</span></span>
+  `;
+  el.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      activeView = tab.dataset.view;
+      renderViewTabs();
+      renderList();
+    });
+  });
+}
 
 function renderFilters() {
   const el = document.getElementById('filters');
@@ -445,12 +508,14 @@ function renderFilters() {
     chip.addEventListener('click', () => {
       activeFilter = chip.dataset.cat;
       renderFilters();
+      renderViewTabs();
       renderList();
       renderNextMatch();
     });
   });
 }
 
+// Partidos de la categoría elegida (sin distinguir jugados/próximos), ordenados por fecha
 function filteredFixtures() {
   const list = activeFilter === 'Todos' ? ALL_FIXTURES : ALL_FIXTURES.filter(f => f.categoria === activeFilter);
   return [...list].sort((a, b) => {
@@ -463,11 +528,21 @@ function filteredFixtures() {
   });
 }
 
+// Lo que se muestra en la lista según la pestaña activa
+function visibleFixtures() {
+  const list = filteredFixtures();
+  if (activeView === 'jugados') return list.filter(isPlayed).reverse(); // el más reciente primero
+  return list.filter(f => !isPlayed(f));
+}
+
 function renderList() {
   const container = document.getElementById('fixture-container');
-  const list = filteredFixtures();
+  const list = visibleFixtures();
   if (!list.length) {
-    container.innerHTML = `<div class="empty-state">No hay partidos para este filtro.</div>`;
+    const msg = activeView === 'jugados'
+      ? 'Todavía no hay partidos jugados para este filtro.'
+      : 'No quedan partidos por jugar para este filtro.';
+    container.innerHTML = `<div class="empty-state">${msg}</div>`;
     return;
   }
   let html = '';
@@ -480,7 +555,7 @@ function renderList() {
     }
     let resultHTML;
     if (!f.resultado) {
-      resultHTML = `<div class="result-badge pending">Por jugar</div>`;
+      resultHTML = `<div class="result-badge pending">${isPlayed(f) ? 'Sin resultado' : 'Por jugar'}</div>`;
     } else {
       const parts = f.resultado.split('-').map(Number);
       const [a, b] = parts;
@@ -518,8 +593,7 @@ function renderList() {
 
 let countdownTimer = null;
 function renderNextMatch() {
-  const now = new Date();
-  const upcoming = filteredFixtures().filter(f => f.dateObj >= new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+  const upcoming = filteredFixtures().filter(f => !isPlayed(f));
   if (!upcoming.length) {
     document.getElementById('nm-label').textContent = 'No hay más partidos programados';
     document.getElementById('nm-list').innerHTML = '';
@@ -566,6 +640,7 @@ function renderNextMatch() {
 (async function init() {
   ALL_FIXTURES = await loadFixtures();
   renderFilters();
+  renderViewTabs();
   renderList();
   renderNextMatch();
   const dot = document.getElementById('source-dot');
