@@ -61,7 +61,6 @@ function updateView() {
         return;
     }
 
-    // Cronología cruzada
     if (activeStatus === "proximos") {
         filtered.sort((a, b) => a.fechaObj - b.fechaObj);
     } else {
@@ -136,7 +135,7 @@ function setupNextMatchCountdown() {
     }
 
     futureMatches.sort((a, b) => a.fechaObj - b.fechaObj);
-    const nextMatch = futureMatches[0];
+    const nextMatch = futureMatches[0]; // Corrección para tomar el primer partido inminente
     section.style.display = "block";
 
     const isLocalDragons = nextMatch.equipoLocal.toUpperCase().includes("DRAGONS");
