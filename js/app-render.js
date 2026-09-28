@@ -41,7 +41,6 @@ function updateView() {
     const now = new Date();
     now.setHours(0,0,0,0);
 
-    // Filtrar de forma cruzada por Categoría y Pestaña Seleccionada
     const filtered = localMatches.filter(m => {
         const matchCategory = activeCategory === "todos" || m.categoria.toLowerCase().includes(activeCategory.toLowerCase());
         
@@ -58,11 +57,11 @@ function updateView() {
     });
 
     if (filtered.length === 0) {
-        container.innerHTML = `<div class="empty-state">No hay partidos registrados en esta sección.</div>`;
+        container.innerHTML = `<div class="empty-state">No hay partidos disponibles con este filtro.</div>`;
         return;
     }
 
-    // Ordenar cronológicamente (Próximos ascendente / Resultados descendente)
+    // Cronología cruzada
     if (activeStatus === "proximos") {
         filtered.sort((a, b) => a.fechaObj - b.fechaObj);
     } else {
@@ -158,7 +157,7 @@ function setupNextMatchCountdown() {
     let matchDateTime = new Date(nextMatch.fechaObj);
     if (nextMatch.hora) {
         const [h, m] = nextMatch.hora.split(":");
-        matchDateTime.setHours(parseInt(h), parseInt(m), 0);
+        matchDateTime.setHours(parseInt(h, 10), parseInt(m, 10), 0);
     }
 
     function updateClock() {
