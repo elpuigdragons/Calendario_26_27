@@ -17,7 +17,6 @@ function parseFlexibleDate(dateStr) {
     return new Date(dateStr);
 }
 
-// Convertidor de filas CSV seguro ante mapas y comillas tipográficas
 function splitCSVRow(rowText) {
     const fields = [];
     let field = '';
@@ -44,7 +43,7 @@ async function loadSheetsData() {
         const rows = csvText.split(/\r?\n/);
         const parsedMatches = [];
 
-        // Empezamos en 1 para saltar la fila de títulos
+        // Empezamos en la línea 1 para ignorar las cabeceras
         for (let i = 1; i < rows.length; i++) {
             if (!rows[i].trim()) continue;
             
@@ -64,7 +63,6 @@ async function loadSheetsData() {
 
             if (!fechaObj || !categoria) continue;
 
-            // Determinar balance W/L/D para los Dragons
             let outcome = "pending";
             const cleanRes = res.replace(/\s+/g, '');
             if (cleanRes && cleanRes !== "-" && cleanRes.includes('-')) {
@@ -138,7 +136,8 @@ function updateView() {
     now.setHours(0,0,0,0);
 
     const filtered = localMatches.filter(m => {
-        const matchCategory = activeCategory === "todos" || m.categoria.toLowerCase().includes(activeCategory.toLowerCase());
+        // Validación exacta por categoría
+        const matchCategory = activeCategory === "todos" || m.categoria.toLowerCase().trim() === activeCategory.toLowerCase().trim();
         const hasResult = m.resultado !== "-" && m.resultado !== "";
         let matchStatus = true;
         
@@ -253,7 +252,4 @@ function setupNextMatchCountdown() {
 
     function updateClock() {
         const t = matchDateTime - new Date();
-        if (t <= 0) {
-            countdownContainer.innerHTML = "<span class='pending'>¡EN JUEGO!</span>";
-            return;
-        }
+if (t <= 0) {countdownContainer.innerHTML = "¡EN JUEGO!";return;}const days = Math.floor(t / (1000 * 60 * 60 * 24));const hours = Math.floor((t / (1000 * 60 * 60)) % 24);const mins = Math.floor((t / 1000 / 60) % 60);countdownContainer.innerHTML = <div class="unit"><div class="num">${days}</div><div class="u-label">DÍAS</div></div> <div class="unit"><div class="num">${hours}</div><div class="u-label">HORAS</div></div> <div class="unit"><div class="num">${mins}</div><div class="u-label">MINS</div></div>;}updateClock();setInterval(updateClock, 60000);}
