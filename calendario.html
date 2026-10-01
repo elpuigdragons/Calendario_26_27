@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dragons El Puig — Calendario de fines de semana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0E0D0C; --bg-alt:#161514; --card:#1B1918; --ink:#F5F3EF; --ink-dim:#928D86;
+    --ember:#C8202C; --silver:#E2E0DB; --line:#2A2826; --win:#4FBF6E; --loss:#E14B4B;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'Manrope',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  .display { font-family:'Big Shoulders Display','Arial Narrow',sans-serif; font-weight:800; line-height:.86; letter-spacing:.01em; }
+  .wrap { max-width:900px; margin:0 auto; padding:0 16px; }
+  a { color:inherit; }
+
+  header { position:relative; padding:36px 0 22px; border-bottom:1px solid var(--line); overflow:hidden; }
+  header::before { content:''; position:absolute; top:-40%; right:-14%; width:55%; height:170%; background:radial-gradient(circle at 60% 40%, rgba(200,32,44,.16), transparent 65%); pointer-events:none; }
+  .back { display:inline-block; font-size:.85rem; color:var(--ink-dim); text-decoration:none; margin-bottom:16px; }
+  .back:hover { color:var(--ink); }
+  h1 { font-size:clamp(2.4rem,9vw,4.4rem); margin:0; }
+  h1 span { color:var(--ember); }
+  .sub { color:var(--ink-dim); margin:12px 0 0; max-width:54ch; line-height:1.5; font-size:.98rem; }
+
+  .filters { display:flex; gap:8px; flex-wrap:wrap; margin-top:20px; }
+  .chip { display:inline-flex; align-items:center; gap:7px; background:var(--card); border:1px solid var(--line); color:var(--ink-dim); padding:7px 13px; border-radius:100px; font-size:.84rem; font-weight:600; cursor:pointer; user-select:none; }
+  .chip.active { background:var(--ember); border-color:var(--ember); color:#fff; }
+  .chip:not(.active):hover { border-color:var(--silver); color:var(--ink); }
+
+  .summary { margin:22px 0 6px; background:var(--card); border:1px solid var(--line); border-left:3px solid var(--ember); border-radius:3px; padding:16px 20px; }
+  .stats { display:flex; gap:28px; flex-wrap:wrap; }
+  .stat .n { font-family:'Big Shoulders Display',sans-serif; font-weight:800; font-size:2.2rem; line-height:1; }
+  .stat.free .n { color:var(--win); }
+  .stat .l { font-size:.74rem; color:var(--ink-dim); margin-top:3px; }
+  .free-title { font-size:.8rem; color:var(--ink-dim); margin:16px 0 8px; }
+  .free-list { display:flex; flex-wrap:wrap; gap:6px; }
+  .free-list span { font-size:.8rem; font-weight:600; color:var(--win); border:1px solid rgba(79,191,110,.4); background:rgba(79,191,110,.08); padding:4px 10px; border-radius:100px; }
+  .legend { display:flex; gap:16px; flex-wrap:wrap; font-size:.76rem; color:var(--ink-dim); margin:14px 0 0; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:-1px; }
+
+  .month { margin-top:30px; }
+  .month h2 { font-size:1.5rem; margin:0 0 10px; color:var(--silver); text-transform:capitalize; }
+  .grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .dow { font-size:.68rem; color:var(--ink-dim); text-align:center; padding:4px 0; text-transform:lowercase; }
+  .dow.we { color:var(--silver); font-weight:700; }
+  .cell { min-height:68px; background:var(--bg-alt); border:1px solid var(--line); border-radius:4px; padding:4px; display:flex; flex-direction:column; gap:3px; font:inherit; color:inherit; text-align:left; }
+  .cell.blank { background:none; border-color:transparent; }
+  .cell .num { font-family:'Big Shoulders Display',sans-serif; font-weight:800; font-size:1rem; line-height:1; color:var(--ink-dim); }
+  .cell.we { background:#1c1a19; }
+  .cell.has { border-color:var(--ember); background:rgba(200,32,44,.1); cursor:pointer; }
+  .cell.has .num { color:var(--ink); }
+  .cell.has:hover { background:rgba(200,32,44,.2); }
+  .cell.free { border-color:rgba(79,191,110,.35); background:rgba(79,191,110,.06); }
+  .cell.free .lbl { font-size:.62rem; font-weight:700; color:var(--win); }
+  .cell.past { opacity:.5; }
+  .cell.today { box-shadow:0 0 0 2px var(--silver); }
+  .tags { display:flex; flex-wrap:wrap; gap:2px; }
+  .tag { font-size:.6rem; font-weight:800; padding:1px 4px; border-radius:3px; line-height:1.3; }
+  .tag.blanco { background:var(--ink); color:var(--bg); }
+  .tag.negro { background:var(--bg); color:var(--ink); border:1px solid var(--silver); }
+  .tag.more { color:var(--ink-dim); }
+
+  .empty { color:var(--ink-dim); padding:40px 0; line-height:1.55; }
+  .empty button { background:var(--ember); color:#fff; border:0; padding:9px 18px; border-radius:100px; font:700 .86rem 'Manrope',sans-serif; cursor:pointer; margin-top:12px; }
+
+  dialog { background:var(--card); color:var(--ink); border:1px solid var(--line); border-top:3px solid var(--ember); border-radius:6px; padding:20px; width:min(480px,92vw); max-height:80vh; overflow:auto; }
+  dialog::backdrop { background:rgba(0,0,0,.65); }
+  dialog h3 { font-size:1.5rem; margin:0 0 12px; text-transform:capitalize; }
+  .m { padding:12px 0; border-top:1px solid var(--line); }
+  .m .top { font-size:.76rem; color:var(--ink-dim); margin-bottom:5px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .m .t { font-weight:700; line-height:1.35; }
+  .m .t .dr { color:var(--ember); }
+  .m .t .vs { color:var(--ink-dim); font-weight:500; padding:0 6px; }
+  .m .v { font-size:.82rem; color:var(--ink-dim); margin-top:4px; }
+  .m .v b { color:var(--ink); }
+  .close { margin-top:10px; background:var(--bg-alt); color:var(--ink); border:1px solid var(--line); padding:8px 18px; border-radius:100px; font:700 .85rem 'Manrope',sans-serif; cursor:pointer; }
+
+  footer { margin-top:40px; padding:26px 0 calc(36px + env(safe-area-inset-bottom,0px)); border-top:1px solid var(--line); color:var(--ink-dim); font-size:.82rem; line-height:1.6; }
+
+  @media (max-width:560px) {
+    .wrap { padding:0 10px; }
+    .cell { min-height:56px; padding:3px; }
+    .tag { font-size:.54rem; padding:1px 3px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="back" href="index.html">← Volver a los partidos</a>
+    <h1 class="display">CALEN<span>DARIO</span></h1>
+    <p class="sub">Qué fines de semana hay partidos y cuáles están libres. Toca un día marcado para ver el detalle.</p>
+    <div class="filters" id="filters"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="summary" id="summary" hidden></div>
+  <div id="months"></div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Página informativa. Para validar correctamente los horarios lo mejor es verlos directamente en <a href="https://www.hockeylinea.fpcv.es/" target="_blank" rel="noopener">la página de la federación</a>.</p>
+  </div>
+</footer>
+
+<dialog id="dlg"></dialog>
+
+<script>
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSl5xg397GTfLDogRcVZAXObRrp8JH7-j5YAlel0hNU1Sb33IS_WT0KxKDY_5fNKuL_YWnqUubSiG25/pub?gid=795521530&single=true&output=csv";
+const CODES = {'PreBenjamín':'PB','Benjamín Blanco':'BB','Benjamín Negro':'BN','Alevín Blanco':'AB','Alevín Negro':'AN','Infantil':'INF','Juvenil':'JUV'};
+const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const MS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const DOW = ['lun','mar','mié','jue','vie','sáb','dom'];
+
+/* ---------- Parser CSV mínimo (soporta comillas y comas dentro de campos) ---------- */
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  const pushField = () => { row.push(field); field = ''; };
+  const pushRow = () => { rows.push(row); row = []; };
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], next = text[i + 1];
+    if (inQuotes) {
+      if (c === '"' && next === '"') { field += '"'; i++; }
+      else if (c === '"') { inQuotes = false; }
+      else { field += c; }
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') pushField();
+      else if (c === '\r') { /* skip */ }
+      else if (c === '\n') { pushField(); pushRow(); }
+      else field += c;
+    }
+  }
+  if (field.length || row.length) { pushField(); pushRow(); }
+  const clean = rows.filter(r => r.some(f => f.trim() !== ''));
+  const headers = clean[0].map(h => h.trim());
+  return clean.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, idx) => obj[h] = (r[idx] ?? '').trim());
+    return obj;
+  });
+}
+
+/* ---------- Normalización de fecha/hora (tolerante a formatos del Excel) ---------- */
+function normDate(raw) {
+  if (!raw) return null;
+  let s = raw.trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+function normTime(raw) {
+  if (!raw) return '';
+  const s = raw.trim().replace('.', ':');
+  const m = s.match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return '';
+  return String(m[1]).padStart(2, '0') + ':' + m[2];
+}
+
+
+let ALL = [], filter = 'Todos', MIN, MAX;
+const key = d => d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const colorOf = c => /Negro/i.test(c) ? 'negro' : 'blanco';
+const isDragons = n => /DRAGONS/i.test(n);
+const today = (() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); })();
+
+async function load() {
+  try {
+    let res;
+    try { res = await fetch(SHEET_CSV_URL, { cache: 'no-store' }); }
+    catch (e1) { res = await fetch(SHEET_CSV_URL + '&t=' + Date.now()); }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    ALL = parseCSV(await res.text()).map(r => ({
+      cat: r['Categoría'] || '', d: normDate(r['Fecha']), hora: normTime(r['Hora']),
+      pista: r['Instalación / Pista'] || '', jor: (r['Jornada'] || '').replace(/^JORNADA\s*/i, '').replace(/^J\s*/i, ''),
+      local: r['Equipo Local'] || '', vis: r['Equipo Visitante'] || '',
+      res: (r['Resultado'] || '').trim() === '-' ? '' : (r['Resultado'] || '').trim()
+    })).filter(f => f.d && Math.abs(f.d - today) < 450 * 864e5);
+    if (!ALL.length) throw new Error('la hoja no tiene partidos con fechas válidas');
+    MIN = new Date(Math.min(...ALL.map(f => f.d)));
+    MAX = new Date(Math.max(...ALL.map(f => f.d)));
+    renderFilters(); render();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('months').innerHTML = `<div class="empty"><strong>No se ha podido cargar el calendario.</strong><br>Comprueba tu conexión e inténtalo de nuevo.<br><small>Detalle: ${String(e && e.message || e).replace(/</g,'&lt;')}</small><br><button onclick="location.reload()">Reintentar</button></div>`;
+  }
+}
+
+function renderFilters() {
+  const el = document.getElementById('filters');
+  el.innerHTML = ['Todos', ...Object.keys(CODES)].map(c => `<span class="chip ${c === filter ? 'active' : ''}" data-c="${c}">${c}</span>`).join('');
+  el.querySelectorAll('.chip').forEach(ch => ch.onclick = () => { filter = ch.dataset.c; renderFilters(); render(); });
+}
+
+function render() {
+  const list = filter === 'Todos' ? ALL : ALL.filter(f => f.cat === filter);
+  const by = {};
+  list.forEach(f => (by[key(f.d)] ||= []).push(f));
+  Object.values(by).forEach(a => a.sort((x, y) => (x.hora || '99').localeCompare(y.hora || '99')));
+
+  // Fines de semana dentro del rango de la temporada
+  let sat = new Date(MIN);
+  if (sat.getDay() === 0) sat = addDays(sat, -1); else while (sat.getDay() !== 6) sat = addDays(sat, 1);
+  const startSat = sat, weekends = [];
+  for (let s = new Date(startSat); s <= MAX; s = addDays(s, 7)) {
+    const sun = addDays(s, 1);
+    weekends.push({ sat: s, sun, has: !!(by[key(s)] || by[key(sun)]) });
+  }
+  const withN = weekends.filter(w => w.has).length;
+  const freeUp = weekends.filter(w => !w.has && addDays(w.sun, 1) > today);
+  const fmt = w => w.sat.getMonth() === w.sun.getMonth()
+    ? `${w.sat.getDate()}–${w.sun.getDate()} ${MS[w.sat.getMonth()]}`
+    : `${w.sat.getDate()} ${MS[w.sat.getMonth()]} – ${w.sun.getDate()} ${MS[w.sun.getMonth()]}`;
+  const inRange = d => { const s = d.getDay() === 0 ? addDays(d, -1) : d; return s >= startSat && s <= MAX; };
+
+  const sm = document.getElementById('summary');
+  sm.hidden = false;
+  sm.innerHTML = `
+    <div class="stats">
+      <div class="stat"><div class="n">${withN}</div><div class="l">fines de semana con partidos</div></div>
+      <div class="stat free"><div class="n">${weekends.length - withN}</div><div class="l">fines de semana libres</div></div>
+    </div>
+    <p class="free-title">${freeUp.length ? 'Próximos fines de semana libres' : 'No quedan fines de semana libres'}</p>
+    <div class="free-list">${freeUp.map(w => `<span>${fmt(w)}</span>`).join('')}</div>
+    <div class="legend"><span><i style="background:rgba(200,32,44,.5)"></i>Hay partidos</span><span><i style="background:rgba(79,191,110,.5)"></i>Fin de semana libre</span><span><i style="box-shadow:0 0 0 2px var(--silver)"></i>Hoy</span></div>`;
+
+  let html = '';
+  for (let y = MIN.getFullYear(), m = MIN.getMonth(); y < MAX.getFullYear() || (y === MAX.getFullYear() && m <= MAX.getMonth()); m++) {
+    if (m > 11) { m = 0; y++; }
+    const off = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+    let cells = DOW.map((d, i) => `<div class="dow ${i > 4 ? 'we' : ''}">${d}</div>`).join('');
+    cells += '<div class="cell blank"></div>'.repeat(off);
+    for (let d = 1; d <= days; d++) {
+      const dt = new Date(y, m, d), wd = (dt.getDay() + 6) % 7, we = wd > 4, items = by[key(dt)] || [];
+      const free = we && !items.length && inRange(dt) && !(weekends.find(w => w.sat.getTime() === (wd === 6 ? addDays(dt, -1) : dt).getTime()) || {}).has;
+      const cls = ['cell', we ? 'we' : '', items.length ? 'has' : '', free ? 'free' : '', dt < today ? 'past' : '', dt.getTime() === today.getTime() ? 'today' : ''].join(' ');
+      const shown = items.slice(0, 3);
+      const tags = items.length ? `<div class="tags">${shown.map(f => `<span class="tag ${colorOf(f.cat)}">${CODES[f.cat] || f.cat.slice(0, 3)}</span>`).join('')}${items.length > 3 ? `<span class="tag more">+${items.length - 3}</span>` : ''}</div>` : '';
+      const inner = `<span class="num">${d}</span>${tags}${free ? '<span class="lbl">libre</span>' : ''}`;
+      cells += items.length ? `<button class="${cls}" data-k="${key(dt)}">${inner}</button>` : `<div class="${cls}">${inner}</div>`;
+    }
+    html += `<section class="month"><h2 class="display">${MONTHS[m]} ${y}</h2><div class="grid">${cells}</div></section>`;
+  }
+  const box = document.getElementById('months');
+  box.innerHTML = html;
+  box.querySelectorAll('button.cell').forEach(b => b.onclick = () => openDay(by[b.dataset.k]));
+}
+
+function openDay(items) {
+  const d = items[0].d;
+  const dlg = document.getElementById('dlg');
+  const team = n => isDragons(n) ? `<span class="dr">${n.replace(/DRAGONS EL PUIG\s*/i, 'Dragons ').trim()}</span>` : n;
+  dlg.innerHTML = `<h3 class="display">${d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</h3>` +
+    items.map(f => `<div class="m">
+      <div class="top"><span class="tag ${colorOf(f.cat)}">${CODES[f.cat] || ''}</span>${f.cat}${f.jor ? ' · Jornada ' + f.jor : ''}</div>
+      <div class="t">${team(f.local)}<span class="vs">vs</span>${team(f.vis)}</div>
+      <div class="v">${f.hora ? '<b>' + f.hora + '</b> · ' : 'Hora por confirmar · '}${f.pista}${f.res ? ' · Resultado <b>' + f.res + '</b>' : ''}</div>
+    </div>`).join('') + '<button class="close">Cerrar</button>';
+  dlg.querySelector('.close').onclick = () => dlg.close();
+  dlg.showModal();
+}
+document.getElementById('dlg').addEventListener('click', e => { if (e.target.id === 'dlg') e.target.close(); });
+load();
+</script>
+</body>
+</html>
