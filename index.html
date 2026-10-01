@@ -323,7 +323,7 @@
 
 <main class="wrap">
   <div id="fixture-container"></div>
-  <span class="source-tag" id="source-tag"><span class="dot" id="source-dot"></span><span id="source-text">Conectando con Google Sheets…</span></span>
+  <span class="source-tag" id="source-tag"><span class="dot" id="source-dot"></span><span id="source-text">Conectando con origen de datos…</span></span>
 </main>
 
 <footer>
@@ -448,7 +448,7 @@ function showLoadError() {
       <button class="retry-btn" onclick="location.reload()">Reintentar</button>
     </div>`;
   document.getElementById('source-dot').style.background = 'var(--loss)';
-  document.getElementById('source-text').textContent = 'Error al conectar con Google Sheets';
+  document.getElementById('source-text').textContent = 'Error al conectar con origen de datos';
 }
 
 /* ---------- Ayudas de presentación ---------- */
@@ -648,7 +648,7 @@ function renderNextMatch() {
   renderList();
   renderNextMatch();
   document.getElementById('source-dot').style.background = 'var(--win)';
-  document.getElementById('source-text').textContent = 'Datos en vivo desde Google Sheets';
+  document.getElementById('source-text').textContent = 'Datos en vivo';
 })();
 </script>
 </body>
