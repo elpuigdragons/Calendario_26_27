@@ -1,1 +1,32 @@
+name: Actualizar datos.csv
 
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # cada 30 minutos
+  workflow_dispatch:          # permite lanzarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Descargar CSV de Google Sheets
+        run: |
+          curl -fsSL --retry 3 --max-time 60 \
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vSl5xg397GTfLDogRcVZAXObRrp8JH7-j5YAlel0hNU1Sb33IS_WT0KxKDY_5fNKuL_YWnqUubSiG25/pub?gid=795521530&single=true&output=csv" \
+            -o nuevo.csv
+          # Validar antes de sustituir: más de una línea y cabecera con "Fecha"
+          test "$(wc -l < nuevo.csv)" -gt 1
+          grep -q "Fecha" nuevo.csv
+          mv nuevo.csv datos.csv
+
+      - name: Guardar solo si hay cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datos.csv
+          git diff --cached --quiet || (git commit -m "Actualizar datos.csv" && git push)
