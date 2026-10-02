@@ -182,27 +182,48 @@ const colorOf = c => /Negro/i.test(c) ? 'negro' : 'blanco';
 const isDragons = n => /DRAGONS/i.test(n);
 const today = (() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); })();
 
+const CACHE_KEY = 'dragons_fixtures_csv_v1';   // misma clave que index.html: comparten caché
+
+function buildAll(csvText) {
+  const all = parseCSV(csvText).map(r => ({
+    cat: r['Categoría'] || '', d: normDate(r['Fecha']), hora: normTime(r['Hora']),
+    pista: r['Instalación / Pista'] || '', jor: (r['Jornada'] || '').replace(/^JORNADA\s*/i, '').replace(/^J\s*/i, ''),
+    local: r['Equipo Local'] || '', vis: r['Equipo Visitante'] || '',
+    res: (r['Resultado'] || '').trim() === '-' ? '' : (r['Resultado'] || '').trim(),
+    mapa: r['Mapa'] || ''
+  })).filter(f => f.d && Math.abs(f.d - today) < 450 * 864e5);
+  if (!all.length) throw new Error('la hoja no tiene partidos con fechas válidas');
+  return all;
+}
+
+function paintAll(all) {
+  ALL = all;
+  MIN = new Date(Math.min(...ALL.map(f => f.d)));
+  MAX = new Date(Math.max(...ALL.map(f => f.d)));
+  renderFilters(); render();
+}
+
 async function load() {
+  // 1) Pintar al instante con los últimos datos guardados (si los hay)
+  let cached = null, shown = false;
+  try { cached = localStorage.getItem(CACHE_KEY); } catch (e) {}
+  if (cached) { try { paintAll(buildAll(cached)); shown = true; } catch (e) {} }
+
+  // 2) Pedir datos frescos a Google Sheets (máx. 10 s) y actualizar si han cambiado
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 10000);
   try {
-    let res;
-    try { res = await fetch(SHEET_CSV_URL, { cache: 'no-store' }); }
-    catch (e1) { res = await fetch(SHEET_CSV_URL + '&t=' + Date.now()); }
+    const res = await fetch(SHEET_CSV_URL, { signal: ctrl.signal });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    ALL = parseCSV(await res.text()).map(r => ({
-      cat: r['Categoría'] || '', d: normDate(r['Fecha']), hora: normTime(r['Hora']),
-      pista: r['Instalación / Pista'] || '', jor: (r['Jornada'] || '').replace(/^JORNADA\s*/i, '').replace(/^J\s*/i, ''),
-      local: r['Equipo Local'] || '', vis: r['Equipo Visitante'] || '',
-      res: (r['Resultado'] || '').trim() === '-' ? '' : (r['Resultado'] || '').trim(),
-      mapa: r['Mapa'] || ''
-    })).filter(f => f.d && Math.abs(f.d - today) < 450 * 864e5);
-    if (!ALL.length) throw new Error('la hoja no tiene partidos con fechas válidas');
-    MIN = new Date(Math.min(...ALL.map(f => f.d)));
-    MAX = new Date(Math.max(...ALL.map(f => f.d)));
-    renderFilters(); render();
+    const fresh = await res.text();
+    const all = buildAll(fresh);
+    try { localStorage.setItem(CACHE_KEY, fresh); } catch (e) {}
+    if (!shown || fresh !== cached) paintAll(all);
   } catch (e) {
     console.error(e);
-    document.getElementById('months').innerHTML = `<div class="empty"><strong>No se ha podido cargar el calendario.</strong><br>Comprueba tu conexión e inténtalo de nuevo.<br><small>Detalle: ${String(e && e.message || e).replace(/</g,'&lt;')}</small><br><button onclick="location.reload()">Reintentar</button></div>`;
-  }
+    if (shown) return;   // ya hay datos guardados en pantalla
+    document.getElementById('months').innerHTML = `<div class="empty"><strong>No se ha podido cargar el calendario.</strong><br>Comprueba tu conexión e inténtalo de nuevo.<br><small>Detalle: ${e.message}</small></div>`;
+  } finally { clearTimeout(t); }
 }
 
 function renderFilters() {
