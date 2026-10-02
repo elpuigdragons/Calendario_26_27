@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script type="text/javascript" src="https://gc.kes.v2.scr.kaspersky-labs.com/7EA5E9BB-55E1-4C31-9C21-4943DDFED2E4/main.js?attr=V3SAcQTJGoBUhHNHh_p3R7mPvt9uycL7uDi88VazNNjDGGT1Y97w34ew4G7jY_EvmJ4HHhv4XfJOM1kj9xpFhHq5HGj9ruzD5E7BCzqbTWotFZowxn_Iy3VBAN6p0g5xzK8azl2RqewBPM7K96sKmmB4KGkCl9w_fieRD7fCiTB00iBDe8Td0xeXOTf7z1wcsxaUqPhcK4FCc1NcRjY0z3-3zKDRXlm3MxHaaDtCseYgzZHSyzJXSyuVHoX84q5-QyCsvr9DcUeTD7EamowLnZjDivyjAVwH46ZgMSz6ctHwOG0w8M8rLbTWpsIrwiZG" charset="UTF-8"></script><style>
+<style>
   :root {
     --bg: #0E0D0C;
     --bg-alt: #161514;
@@ -417,34 +417,40 @@ function normTime(raw) {
 
 let dataIsLive = false;
 
-// Devuelve la lista de partidos, o null si no se ha podido cargar la Sheet
-async function loadFixtures() {
+const CACHE_KEY = 'dragons_fixtures_csv_v1';
+
+function buildFixtures(csvText) {
+  const rows = parseCSV(csvText);
+  const fixtures = rows.map(r => {
+    const dateObj = normDate(r['Fecha']);
+    return {
+      categoria: r['Categoría'] || '',
+      dateObj,
+      hora: normTime(r['Hora']),
+      pista: r['Instalación / Pista'] || '',
+      jornada: (r['Jornada'] || '').replace(/^JORNADA\s*/i, '').replace(/^J\s*/i, ''),
+      local: r['Equipo Local'] || '',
+      visitante: r['Equipo Visitante'] || '',
+      resultado: (r['Resultado'] || '').trim() === '-' ? '' : (r['Resultado'] || '').trim(),
+      mapa: r['Mapa'] || ''
+    };
+  }).filter(f => f.dateObj);
+  if (!fixtures.length) throw new Error('La hoja no contiene partidos');
+  return fixtures;
+}
+
+// Descarga el CSV (con tiempo límite de 10 s). Devuelve el texto o null.
+async function fetchCsv() {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 10000);
   try {
-    const res = await fetch(SHEET_CSV_URL, { cache: 'no-store' });
+    const res = await fetch(SHEET_CSV_URL, { signal: ctrl.signal });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const rows = parseCSV(await res.text());
-    const fixtures = rows.map(r => {
-      const dateObj = normDate(r['Fecha']);
-      return {
-        categoria: r['Categoría'] || '',
-        dateObj,
-        hora: normTime(r['Hora']),
-        pista: r['Instalación / Pista'] || '',
-        jornada: (r['Jornada'] || '').replace(/^JORNADA\s*/i, '').replace(/^J\s*/i, ''),
-        local: r['Equipo Local'] || '',
-        visitante: r['Equipo Visitante'] || '',
-        resultado: (r['Resultado'] || '').trim() === '-' ? '' : (r['Resultado'] || '').trim(),
-        mapa: r['Mapa'] || ''
-      };
-    }).filter(f => f.dateObj);
-    if (!fixtures.length) throw new Error('La hoja no contiene partidos');
-    dataIsLive = true;
-    return fixtures;
+    return await res.text();
   } catch (e) {
     console.error('No se pudo cargar la hoja.', e);
-    dataIsLive = false;
     return null;
-  }
+  } finally { clearTimeout(t); }
 }
 
 function showLoadError() {
@@ -651,16 +657,34 @@ function renderNextMatch() {
   countdownTimer = setInterval(tick, 30000);
 }
 
-(async function init() {
-  const data = await loadFixtures();
-  if (!data) { showLoadError(); return; }
+function paint(data, live) {
   ALL_FIXTURES = data;
   renderFilters();
   renderViewTabs();
   renderList();
   renderNextMatch();
-  document.getElementById('source-dot').style.background = 'var(--win)';
-  document.getElementById('source-text').textContent = 'Datos en vivo';
+  document.getElementById('source-dot').style.background = live ? 'var(--win)' : 'var(--text-dim, #999)';
+  document.getElementById('source-text').textContent = live ? 'Datos en vivo' : 'Actualizando datos…';
+}
+
+(async function init() {
+  let cached = null, shown = false;
+  try { cached = localStorage.getItem(CACHE_KEY); } catch (e) {}
+  if (cached) {
+    try { paint(buildFixtures(cached), false); shown = true; } catch (e) {}
+  }
+  const fresh = await fetchCsv();
+  if (fresh) {
+    try {
+      const data = buildFixtures(fresh);
+      try { localStorage.setItem(CACHE_KEY, fresh); } catch (e) {}
+      if (fresh !== cached || !shown) { if (typeof countdownTimer !== 'undefined' && countdownTimer) clearInterval(countdownTimer); paint(data, true); }
+      else { document.getElementById('source-dot').style.background = 'var(--win)'; document.getElementById('source-text').textContent = 'Datos en vivo'; }
+      return;
+    } catch (e) { console.error(e); }
+  }
+  if (shown) { document.getElementById('source-text').textContent = 'Sin conexión: mostrando últimos datos guardados'; return; }
+  showLoadError();
 })();
 </script>
 </body>
