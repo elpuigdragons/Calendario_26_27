@@ -203,19 +203,34 @@ function paintAll(all) {
   renderFilters(); render();
 }
 
+async function getText(url, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.text();
+  } finally { clearTimeout(t); }
+}
+
+// 1) copia local datos.csv (la genera GitHub Actions; carga casi instantánea)
+// 2) si no existe o falla, Google Sheets directamente
+async function fetchCsv() {
+  try { const txt = await getText('datos.csv', 5000); if (txt.includes('Fecha')) return txt; } catch (e) {}
+  try { return await getText(SHEET_CSV_URL, 10000); }
+  catch (e) { console.error('No se pudo cargar la hoja.', e); return null; }
+}
+
 async function load() {
   // 1) Pintar al instante con los últimos datos guardados (si los hay)
   let cached = null, shown = false;
   try { cached = localStorage.getItem(CACHE_KEY); } catch (e) {}
   if (cached) { try { paintAll(buildAll(cached)); shown = true; } catch (e) {} }
 
-  // 2) Pedir datos frescos a Google Sheets (máx. 10 s) y actualizar si han cambiado
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 10000);
+  // 2) Pedir datos frescos (datos.csv local, o Google como respaldo) y actualizar si han cambiado
   try {
-    const res = await fetch(SHEET_CSV_URL, { signal: ctrl.signal });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const fresh = await res.text();
+    const fresh = await fetchCsv();
+    if (!fresh) throw new Error('no se pudo descargar');
     const all = buildAll(fresh);
     try { localStorage.setItem(CACHE_KEY, fresh); } catch (e) {}
     if (!shown || fresh !== cached) paintAll(all);
@@ -223,7 +238,7 @@ async function load() {
     console.error(e);
     if (shown) return;   // ya hay datos guardados en pantalla
     document.getElementById('months').innerHTML = `<div class="empty"><strong>No se ha podido cargar el calendario.</strong><br>Comprueba tu conexión e inténtalo de nuevo.<br><small>Detalle: ${e.message}</small></div>`;
-  } finally { clearTimeout(t); }
+  }
 }
 
 function renderFilters() {
