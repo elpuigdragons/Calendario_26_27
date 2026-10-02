@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script type="text/javascript" src="https://gc.kes.v2.scr.kaspersky-labs.com/7EA5E9BB-55E1-4C31-9C21-4943DDFED2E4/main.js?attr=M_EdZuNPMJdnVNc8oOBhMi6tlJxtJI3dsv6Z0Fl2Byy0zG0v2Bb0862PE0-YasYWGz94dNmnI9ezUGpb0Mspdlk9PPCxty2cmN0o9yw-E22K1TjRw0gVFgV2y3bQeTNaL6k4TjG4f1yOPb7NDvXkPj85uP5y0tNVfvhmX9f12cHHZTyc12ErQTik60IexkjqGfXlzJyRGKv5HOCRA1jOFPZhe0C2jHneFhPltksAGsCmOkKJphAiYAAFi3QVkBwFG3izeSgESft-P7OPQKAAfHW44KOUBRq-QFgAF_oV7JTLPjQ_qUwl7AA9d0loON-G5HXceG-QYDk6AycV_-Jo_w" charset="UTF-8"></script><style>
+<script type="text/javascript" src="https://gc.kes.v2.scr.kaspersky-labs.com/7EA5E9BB-55E1-4C31-9C21-4943DDFED2E4/main.js?attr=qXAkBrQZmJGOW6YLH4U78fpU4gVygEtBuUgQx1YE0EBU9JQ8OVHzkcU_oAko5Qev9mx5dLPMviosXDkdJjCGxSO2BSP9uZXA3p_WxXAjIuD6X_7eW5ZWS89i0-IcAS2KlVfwm_2XRUBWNAg25wqjwpS3j6wWdyGKosnAR3j8ZpYGp_PaCnCAi6Dh5y5PUldYcG2ewE_yR8BNqyO-aTBTMgQUuQ4t9JzvVVSqcVpW4uJrhDEYqxRTbof1_IkG6vWyAAVwIF73rCFhKdw1oMrCvUHG-VaLzvgAbPjZ9yHzl5A0XVB0pvQfeXj32iNbIEQb" charset="UTF-8"></script><style>
   :root {
     --bg:#0E0D0C; --bg-alt:#161514; --card:#1B1918; --ink:#F5F3EF; --ink-dim:#928D86;
     --ember:#C8202C; --silver:#E2E0DB; --line:#2A2826; --win:#4FBF6E; --loss:#E14B4B;
@@ -72,10 +72,6 @@
 
   dialog { background:var(--card); color:var(--ink); border:1px solid var(--line); border-top:3px solid var(--ember); border-radius:6px; padding:20px; width:min(480px,92vw); max-height:80vh; overflow:auto; }
   dialog::backdrop { background:rgba(0,0,0,.65); }
-  
-  .m .map-link { display:inline-flex; align-items:center; gap:4px; font-size:.76rem; color:var(--silver); text-decoration:none; border:1px solid var(--line); padding:3px 8px; border-radius:100px; margin-top:6px; }
-  .m .map-link:hover { border-color:var(--silver); color:var(--ink); }
-
   dialog h3 { font-size:1.5rem; margin:0 0 12px; text-transform:capitalize; }
   .m { padding:12px 0; border-top:1px solid var(--line); }
   .m .top { font-size:.76rem; color:var(--ink-dim); margin-bottom:5px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
@@ -175,7 +171,7 @@ function normTime(raw) {
 }
 
 
-let ALL = [], filter = 'Todos', MIN, MAX;
+let ALL = [], selectedFilters = new Set(Object.keys(CODES)), MIN, MAX;
 const key = d => d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
 const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 const colorOf = c => /Negro/i.test(c) ? 'negro' : 'blanco';
@@ -192,8 +188,7 @@ async function load() {
       cat: r['Categoría'] || '', d: normDate(r['Fecha']), hora: normTime(r['Hora']),
       pista: r['Instalación / Pista'] || '', jor: (r['Jornada'] || '').replace(/^JORNADA\s*/i, '').replace(/^J\s*/i, ''),
       local: r['Equipo Local'] || '', vis: r['Equipo Visitante'] || '',
-      res: (r['Resultado'] || '').trim() === '-' ? '' : (r['Resultado'] || '').trim(),
-      mapa: r['Mapa'] || ''
+      res: (r['Resultado'] || '').trim() === '-' ? '' : (r['Resultado'] || '').trim()
     })).filter(f => f.d && Math.abs(f.d - today) < 450 * 864e5);
     if (!ALL.length) throw new Error('la hoja no tiene partidos con fechas válidas');
     MIN = new Date(Math.min(...ALL.map(f => f.d)));
@@ -207,12 +202,38 @@ async function load() {
 
 function renderFilters() {
   const el = document.getElementById('filters');
-  el.innerHTML = ['Todos', ...Object.keys(CODES)].map(c => `<span class="chip ${c === filter ? 'active' : ''}" data-c="${c}">${c}</span>`).join('');
-  el.querySelectorAll('.chip').forEach(ch => ch.onclick = () => { filter = ch.dataset.c; renderFilters(); render(); });
+  const allCats = Object.keys(CODES);
+  const isAllSelected = selectedFilters.size === allCats.length;
+
+  let chipsHTML = `<span class="chip ${isAllSelected ? 'active' : ''}" data-c="Todos">Todos</span>`;
+  chipsHTML += allCats.map(c => `<span class="chip ${selectedFilters.has(c) ? 'active' : ''}" data-c="${c}">${c}</span>`).join('');
+
+  el.innerHTML = chipsHTML;
+
+  el.querySelectorAll('.chip').forEach(ch => {
+    ch.onclick = () => {
+      const c = ch.dataset.c;
+      if (c === 'Todos') {
+        if (selectedFilters.size === allCats.length) {
+          selectedFilters.clear(); // O podemos dejarlo despejado o todas deseleccionadas
+        } else {
+          selectedFilters = new Set(allCats);
+        }
+      } else {
+        if (selectedFilters.has(c)) {
+          selectedFilters.delete(c);
+        } else {
+          selectedFilters.add(c);
+        }
+      }
+      renderFilters();
+      render();
+    };
+  });
 }
 
 function render() {
-  const list = filter === 'Todos' ? ALL : ALL.filter(f => f.cat === filter);
+  const list = ALL.filter(f => selectedFilters.has(f.cat));
   const by = {};
   list.forEach(f => (by[key(f.d)] ||= []).push(f));
   Object.values(by).forEach(a => a.sort((x, y) => (x.hora || '99').localeCompare(y.hora || '99')));
@@ -274,7 +295,6 @@ function openDay(items) {
       <div class="top"><span class="tag ${colorOf(f.cat)}">${CODES[f.cat] || ''}</span>${f.cat}${f.jor ? ' · Jornada ' + f.jor : ''}</div>
       <div class="t">${team(f.local)}<span class="vs">vs</span>${team(f.vis)}</div>
       <div class="v">${f.hora ? '<b>' + f.hora + '</b> · ' : 'Hora por confirmar · '}${f.pista}${f.res ? ' · Resultado <b>' + f.res + '</b>' : ''}</div>
-      ${f.mapa ? `<div><a class="map-link" href="${f.mapa}" target="_blank" rel="noopener">📍 Ver mapa de la pista</a></div>` : ''}
     </div>`).join('') + '<button class="close">Cerrar</button>';
   dlg.querySelector('.close').onclick = () => dlg.close();
   dlg.showModal();
