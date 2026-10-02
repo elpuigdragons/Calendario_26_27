@@ -439,18 +439,22 @@ function buildFixtures(csvText) {
   return fixtures;
 }
 
-// Descarga el CSV (con tiempo límite de 10 s). Devuelve el texto o null.
-async function fetchCsv() {
+async function getText(url, ms) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 10000);
+  const t = setTimeout(() => ctrl.abort(), ms);
   try {
-    const res = await fetch(SHEET_CSV_URL, { signal: ctrl.signal });
+    const res = await fetch(url, { signal: ctrl.signal });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return await res.text();
-  } catch (e) {
-    console.error('No se pudo cargar la hoja.', e);
-    return null;
   } finally { clearTimeout(t); }
+}
+
+// 1) copia local datos.csv (la genera GitHub Actions; carga casi instantánea)
+// 2) si no existe o falla, Google Sheets directamente
+async function fetchCsv() {
+  try { const txt = await getText('datos.csv', 5000); if (txt.includes('Fecha')) return txt; } catch (e) {}
+  try { return await getText(SHEET_CSV_URL, 10000); }
+  catch (e) { console.error('No se pudo cargar la hoja.', e); return null; }
 }
 
 function showLoadError() {
