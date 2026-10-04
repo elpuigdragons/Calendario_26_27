@@ -1,0 +1,74 @@
+name: Extraer partidos
+
+on:
+  # Solo se ejecuta cuando tu lo lanzas a mano (pestana Actions -> Run workflow)
+  workflow_dispatch:
+    inputs:
+      team:
+        description: "Equipo (prefijo, p. ej. PUIG incluye PUIGB)"
+        required: true
+        default: "PUIG"
+      click:
+        description: "Texto de un enlace a pulsar antes (opcional), p. ej. Temporada 2026/27"
+        required: false
+        default: ""
+  # Si algun dia quisieras automatizarlo en fines de semana, por ejemplo:
+  # schedule:
+  #   - cron: "0 20 * * 6,0"   # sabados y domingos a las 20:00 UTC
+
+permissions:
+  contents: write
+
+# Evita dos ejecuciones a la vez (y peticiones duplicadas a la web)
+concurrency:
+  group: extraer-partidos
+  cancel-in-progress: false
+
+jobs:
+  extraer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Ejecutar extraccion
+        env:
+          TEAM: ${{ inputs.team }}
+          CLICK: ${{ inputs.click }}
+        run: |
+          if [ -n "$CLICK" ]; then
+            python partidos_puig.py --team "$TEAM" --click "$CLICK" --debug
+          else
+            python partidos_puig.py --team "$TEAM" --debug
+          fi
+
+      - name: Guardar resultados en el repositorio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add salida/partidos_puig.csv salida/ultima_extraccion.json || true
+          if git diff --cached --quiet; then
+            echo "Sin cambios que guardar"
+          else
+            git commit -m "Actualizar partidos $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+          fi
+
+      # Ficheros de diagnostico (texto de la pagina, filas detectadas), 7 dias
+      - name: Subir ficheros de diagnostico
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: salida
+          path: salida/
+          retention-days: 7
