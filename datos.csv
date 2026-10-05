@@ -1,7 +1,7 @@
 Categoría,Fecha,Hora,Instalación / Pista,Jornada,Equipo Local,Equipo Visitante,Resultado,Mapa
 Benjamín Negro,26/09/2026,11:00,P. MELILLA,JORNADA 1,LLOPS VILA-REAL,DRAGONS EL PUIG NEGRO,1 - 9,https://maps.app.goo.gl/VZUJ5f7LFes9GiqQ8
 Alevín Negro,18/10/2026,13:30,P. INTERNUCLEOS - EL CIELO,JORNADA 3,ALAS SAGUNTO,DRAGONS EL PUIG NEGRO,-,https://maps.app.goo.gl/aWj5CwgSwxuQ6myj7
-Alevín Negro,24/10/2026,,P. LA PEDRERA,J 4,DRAGONS EL PUIG NEGRO,DIABLOS MISLATA,-,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
+Alevín Negro,24/10/2026,,P. LA PEDRERA,J 4,DRAGONS EL PUIG NEGRO,DIABLOS MISLATA,APLAZADO,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Alevín Negro,8/11/2026,,P. LA PEDRERA,JORNADA 5,DRAGONS EL PUIG NEGRO,SKULLS ALPHA,-,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Benjamín Negro,6/11/2026,18:00,P. LA PEDRERA,JORNADA 5,DRAGONS EL PUIG NEGRO,SKULLS ALPHA,-,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Benjamín Negro,7/11/2026,20:30,P. LA PEDRERA,JORNADA 5,DRAGONS EL PUIG NEGRO,SKULLS 2016,-,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
@@ -21,7 +21,7 @@ Alevín Negro,27/02/2027,,P. LA PEDRERA,J 17,DRAGONS EL PUIG NEGRO,HALCONES TORR
 Benjamín Negro,27/02/2027,,P. LA PEDRERA,JORNADA 17,DRAGONS EL PUIG NEGRO,HALCONES TORREVIEJA,-,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Benjamín Blanco,3/10/2026,18:15,P. LA PEDRERA,JORNADA 2,DRAGONS EL PUIG BLANCO,TAURONS NULES OROPESA,4 - 2,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Benjamín Blanco,3/10/2026,,P. INTERNUCLEOS - EL CIELO,JORNADA 3,ALAS SAGUNTO,DRAGONS EL PUIG BLANCO,APLAZADO,https://maps.app.goo.gl/aWj5CwgSwxuQ6myj7
-Benjamín Blanco,24/10/2026,,P. LA PEDRERA,J 4,DRAGONS EL PUIG BLANCO,DIABLOS MISLATA,-,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
+Benjamín Blanco,24/10/2026,,P. LA PEDRERA,J 4,DRAGONS EL PUIG BLANCO,DIABLOS MISLATA,APLAZADO,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Benjamín Blanco,7/11/2026,19:30,P. LA PEDRERA,JORNADA 5,DRAGONS EL PUIG BLANCO,SKULLS 2017,-,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Benjamín Blanco,21/11/2026,,P. LA PEDRERA,J 7,DRAGONS EL PUIG BLANCO,HC CASTELLÓN,-,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Benjamín Blanco,12/12/2026,,P. LA PEDRERA,J 9,DRAGONS EL PUIG BLANCO,TITANES ELCHE,-,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
@@ -46,7 +46,7 @@ Alevín Blanco,06/03/2027,,P. EL TOSCAR,JORNADA 18,TITANES ELCHE,DRAGONS EL PUIG
 PreBenjamín,26/09/2026,10:00,P. Melilla,J1,Llops Vila-real,Dragons El Puig,1 - 9,https://maps.app.goo.gl/VZUJ5f7LFes9GiqQ8
 PreBenjamín,3/10/2026,16:00,P. La Pedrera,JORNADA 2,Dragons El Puig,Taurons Nules Oropesa,10 - 4,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 PreBenjamín,3/10/2026,,P. Internucleos - El Cielo,JORNADA 3,Alas Sagunto,Dragons El Puig,APLAZADO,https://maps.app.goo.gl/aWj5CwgSwxuQ6myj7
-PreBenjamín,24/10/2026,,P. La Pedrera,J4,Dragons El Puig,Diablos Mislata,,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
+PreBenjamín,24/10/2026,,P. La Pedrera,J4,Dragons El Puig,Diablos Mislata,APLAZADO,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 PreBenjamín,7/11/2026,16:00,P. La Pedrera,JORNADA 5,Dragons El Puig,Skulls Almassera,,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 PreBenjamín,14/11/2026,,P. M. de Borriol,J6,Dinos Borriol,Dragons El Puig,,https://maps.app.goo.gl/eSokdKuVDhSR7gbM8
 PreBenjamín,29/11/2026,,P. Cecilio Gallego,J8,Halcones Torrevieja,Dragons El Puig,,https://maps.app.goo.gl/KK4kzUyKf1AbL8247
@@ -59,7 +59,7 @@ PreBenjamín,13/02/2027,,P. La Pedrera,J15,Dragons El Puig,Dinos Borriol,,https:
 PreBenjamín,27/02/2027,,P. La Pedrera,J17,Dragons El Puig,Halcones Torrevieja,,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Infantil,26/09/2026,13:15,P. MELILLA,JORNADA 1,LLOPS VILA-REAL,DRAGONS EL PUIG,0 - 7,https://maps.app.goo.gl/VZUJ5f7LFes9GiqQ8
 Infantil,18/10/2026,12:15,P. INTERNUCLEOS - EL CIELO,JORNADA 3,ALAS SAGUNTO,DRAGONS EL PUIG,,https://maps.app.goo.gl/aWj5CwgSwxuQ6myj7
-Infantil,24/10/2026,,P. LA PEDRERA,JORNADA 4,DRAGONS EL PUIG,DIABLOS MISLATA,,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
+Infantil,24/10/2026,,P. LA PEDRERA,JORNADA 4,DRAGONS EL PUIG,DIABLOS MISLATA,APLAZADO,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Infantil,6/11/2026,19:00,P. LA PEDRERA,JORNADA 5,DRAGONS EL PUIG,SKULLS ALPHA,,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Infantil,7/11/2026,17:00,P. LA PEDRERA,JORNADA 5,DRAGONS EL PUIG,SKULLS BETA,,https://maps.app.goo.gl/dhQK2rf12uF7xLHV7
 Infantil,14/11/2026,,P. M. DE BORRIOL,JORNADA 6,DINOS BORRIOL,DRAGONS EL PUIG,,https://maps.app.goo.gl/eSokdKuVDhSR7gbM8
