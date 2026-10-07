@@ -213,12 +213,15 @@ async function getText(url, ms) {
   } finally { clearTimeout(t); }
 }
 
-// 1) copia local datos.csv (la genera GitHub Actions; carga casi instantánea)
-// 2) si no existe o falla, Google Sheets directamente
+// Carga directa desde Google Sheets (publicado como CSV).
+// Se añade un parámetro único para evitar cachés del navegador/CDN.
 async function fetchCsv() {
-  try { const txt = await getText('datos.csv', 5000); if (txt.includes('Fecha')) return txt; } catch (e) {}
-  try { return await getText(SHEET_CSV_URL, 10000); }
-  catch (e) { console.error('No se pudo cargar la hoja.', e); return null; }
+  const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  try {
+    const txt = await getText(url, 10000);
+    if (txt.includes('Fecha')) return txt;
+    throw new Error('Respuesta inesperada de Google Sheets');
+  } catch (e) { console.error('No se pudo cargar la hoja.', e); return null; }
 }
 
 async function load() {
@@ -227,7 +230,7 @@ async function load() {
   try { cached = localStorage.getItem(CACHE_KEY); } catch (e) {}
   if (cached) { try { paintAll(buildAll(cached)); shown = true; } catch (e) {} }
 
-  // 2) Pedir datos frescos (datos.csv local, o Google como respaldo) y actualizar si han cambiado
+  // 2) Pedir datos frescos (directamente desde Google Sheets) y actualizar si han cambiado
   try {
     const fresh = await fetchCsv();
     if (!fresh) throw new Error('no se pudo descargar');
