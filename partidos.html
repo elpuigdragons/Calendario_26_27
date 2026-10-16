@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Partidos — Dragons El Puig</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/partidos.css">
+<link rel="stylesheet" href="css/nav.css">
+<link rel="stylesheet" href="css/footer.css">
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/theme.js"></script>
+<script src="js/nav.js"></script>
+</head>
+<body>
+<nav class="site-nav" id="site-nav">
+  <div class="nav-in">
+    <a class="nav-brand" href="index.html"><img src="img/escudo.png" alt=""><span class="display">DRAGONS <b>EL PUIG</b></span></a>
+    <button class="nav-toggle" aria-label="Menú" aria-expanded="false">☰</button>
+    <div class="nav-links">
+      <a href="index.html">Inicio</a>
+      <a href="partidos.html" class="on">Partidos</a>
+      <a href="calendario.html">Calendario</a>
+      <a href="noticias.html">Noticias</a>
+      <a href="index.html#equipos">Equipos</a>
+      <a href="index.html#contacto">Contacto</a>
+      <a href="acceso.html">Acceso</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-flame"></div>
+  <div class="wrap">
+    <div class="brand-row">
+      <img class="badge" src="img/escudo.png" alt="Escudo Dragons El Puig">
+      <h1 class="club-name display">DRAGONS<br><span class="accent">EL PUIG</span></h1>
+    </div>
+    <p class="hero-sub">Calendario del club para la temporada 2026/27: Liga Autonómica y Nacional.</p>
+
+    <div class="next-match" id="next-match">
+      <div class="nm-header">
+        <p class="label" id="nm-label">Cargando…</p>
+        <div class="countdown" id="countdown">
+          <div class="unit"><div class="num" id="cd-d">–</div><div class="u-label">días</div></div>
+          <div class="unit"><div class="num" id="cd-h">–</div><div class="u-label">horas</div></div>
+          <div class="unit"><div class="num" id="cd-m">–</div><div class="u-label">min</div></div>
+        </div>
+      </div>
+      <div class="nm-list" id="nm-list"></div>
+    </div>
+
+    <div class="view-tabs" id="view-tabs"></div>
+
+    <div class="filters" id="filters"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="fixture-container"></div>
+  <span class="source-tag" id="source-tag"><span class="dot" id="source-dot"></span><span id="source-text">Conectando con origen de datos…</span></span>
+</main>
+
+<footer class="site-footer" id="contacto"></footer>
+
+<script src="js/config.js"></script>
+<script src="js/footer.js"></script>
+<script src="js/shared.js"></script>
+<script src="js/partidos.js"></script>
+</body>
+</html>
